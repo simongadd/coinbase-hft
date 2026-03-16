@@ -2,8 +2,8 @@ mode: paper
 
 account:
   paper_balance:
-    GBP: "10000.00"
-    EUR: "10000.00"
+    GBP: "100.00"
+    EUR: "100.00"
     BTC: "0.0"
     ETH: "0.0"
 
