@@ -1,0 +1,87 @@
+mode: paper  # paper | live
+
+account:
+  paper_balance:
+    USD: "10000.00"
+    BTC: "0.0"
+    ETH: "0.0"
+
+trading:
+  pairs:
+    - BTC-USD
+    - ETH-USD
+  tick_interval_ms: 100
+
+risk:
+  max_order_size_usd: "500.00"
+  max_position_pct: "0.25"          # 25% of portfolio in single pair
+  max_portfolio_exposure_pct: "0.80"
+  max_drawdown_pct: "0.02"          # 2% session drawdown = halt
+  daily_loss_limit_usd: "200.00"
+  max_latency_ms: 500
+  min_order_interval_ms: 50
+  max_error_rate: 5                  # errors per 60s window
+
+paper:
+  slippage_bps: 5                    # 0.05% simulated slippage
+  fill_probability: "0.85"           # Limit order fill rate
+  fee_rate: "0.006"                  # 60bps taker fee (Coinbase Advanced)
+
+strategies:
+  active: market_making
+  market_making:
+    spread_bps: 20
+    inventory_skew: true
+    max_inventory: "0.1"             # BTC
+  slow_market_maker:
+    global_defaults:
+      spread_bps: 30
+      gamma: "0.1"
+      order_size: "0.001"
+      num_rungs: 3
+      rung_weights: ["0.5", "0.3", "0.2"]
+      rung_spacing_bps: 10
+      quote_refresh_interval_s: 5.0
+      drift_threshold_bps: 5
+      post_only: true
+      vol_window_s: 300
+      vol_halt_pct: "0.02"
+      halt_cooldown_s: 60
+      min_viable_profit_bps: 3
+    pair_overrides:
+      BTC-GBP:
+        spread_bps: 40
+        order_size: "0.0005"
+      ETH-GBP:
+        spread_bps: 35
+      ETH-EUR:
+        spread_bps: 35
+  momentum:
+    lookback_periods: 20
+    entry_threshold: "0.002"         # 0.2% price move to trigger
+    exit_threshold: "0.001"
+    rsi_period: 14
+    rsi_overbought: 70
+    rsi_oversold: 30
+  arbitrage:
+    min_spread_bps: 10
+    max_position_usd: "1000.00"
+
+database:
+  path: "data/trades.db"
+
+redis:
+  host: "localhost"
+  port: 6379
+  db: 0
+
+logging:
+  level: INFO
+  file: "logs/hft.log"
+
+monitoring:
+  prometheus_port: 9090
+  health_port: 8080
+  alerts:
+    slack_webhook: ""               # Set via SLACK_WEBHOOK env var
+    email: ""                       # Set via ALERT_EMAIL env var

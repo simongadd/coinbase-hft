@@ -1,0 +1,72 @@
+mode: paper
+
+account:
+  paper_balance:
+    GBP: "10000.00"
+    EUR: "10000.00"
+    BTC: "0.0"
+    ETH: "0.0"
+
+trading:
+  pairs:
+    - BTC-GBP
+    - ETH-GBP
+    - ETH-EUR
+  tick_interval_ms: 100
+
+risk:
+  max_order_size_usd: "500.00"
+  max_position_pct: "0.25"
+  max_portfolio_exposure_pct: "0.80"
+  max_drawdown_pct: "0.02"
+  daily_loss_limit_usd: "200.00"
+  max_latency_ms: 500
+  min_order_interval_ms: 50
+  max_error_rate: 5
+
+paper:
+  slippage_bps: 0
+  fill_probability: "0.02"
+  fee_rate: "0.0"
+
+strategies:
+  active: slow_market_maker
+  slow_market_maker:
+    fee_rate_bps: 0
+    latency_ms_override: 5
+    global_defaults:
+      spread_bps: 1
+      gamma: "0.1"
+      order_size: "0.001"
+      num_rungs: 3
+      rung_weights: ["0.5", "0.3", "0.2"]
+      rung_spacing_bps: 5
+      quote_refresh_interval_s: 5.0
+      drift_threshold_bps: 8
+      post_only: false
+      vol_window_s: 300
+      vol_halt_pct: "0.05"
+      halt_cooldown_s: 60
+      min_viable_profit_bps: 0
+    pair_overrides:
+      BTC-GBP:
+        spread_bps: 1
+        order_size: "0.0005"
+      ETH-GBP:
+        spread_bps: 1
+      ETH-EUR:
+        spread_bps: 1
+
+database:
+  path: "data/trades.db"
+
+logging:
+  level: INFO
+  file: "logs/hft.log"
+
+monitoring:
+  prometheus_port: 9090
+  health_port: 8080
+  alerts:
+    slack_webhook: ""
+    email: ""

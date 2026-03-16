@@ -1,0 +1,56 @@
+version: 1
+disable_existing_loggers: false
+
+formatters:
+  structured:
+    format: "%(asctime)s %(levelname)-8s %(name)-30s %(message)s"
+    datefmt: "%Y-%m-%dT%H:%M:%S"
+  json:
+    "()": "coinbase_hft.utils.logging_utils.JsonFormatter"
+
+filters:
+  mode_tag:
+    "()": "coinbase_hft.utils.logging_utils.ModeTagFilter"
+
+handlers:
+  console:
+    class: logging.StreamHandler
+    level: DEBUG
+    formatter: structured
+    stream: ext://sys.stdout
+  file:
+    class: logging.handlers.RotatingFileHandler
+    level: DEBUG
+    formatter: structured
+    filename: logs/hft.log
+    maxBytes: 52428800  # 50 MB
+    backupCount: 10
+  trades_file:
+    class: logging.handlers.RotatingFileHandler
+    level: DEBUG
+    formatter: structured
+    filename: logs/trades.log
+    maxBytes: 52428800
+    backupCount: 20
+
+loggers:
+  coinbase_hft:
+    level: INFO
+    handlers: [console, file]
+    propagate: false
+  coinbase_hft.execution:
+    level: DEBUG
+    handlers: [console, file, trades_file]
+    propagate: false
+  coinbase_hft.risk:
+    level: DEBUG
+    handlers: [console, file]
+    propagate: false
+  coinbase_hft.market_data:
+    level: INFO
+    handlers: [console, file]
+    propagate: false
+
+root:
+  level: WARNING
+  handlers: [console]
