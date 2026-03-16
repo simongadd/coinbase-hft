@@ -182,11 +182,26 @@ class SlowMarketMakerStrategy(BaseStrategy):
         pos = self._orders.position_tracker.position(pid)
         q = pos.size  # signed inventory in base currency
 
-        # Realized vol: std dev of 1s log-returns, annualized
-        sigma = self._realized_vol(pid, cfg.vol_window_s, now_ns)
+        # Realized vol: std dev of 1s log-returns, annualized.
+        # Illiquid pairs (few trades/minute) produce very sparse 1s buckets,
+        # causing the annualised figure to explode from normal bid-ask bounces.
+        # Cap at 2.0 (200% annualised) to prevent skew runaway.
+        MAX_SIGMA = Decimal("2.0")
+        sigma = min(self._realized_vol(pid, cfg.vol_window_s, now_ns), MAX_SIGMA)
 
         skew = cfg.gamma * q * sigma * sigma
         reservation_price = mid - skew
+
+        # Safety clamp: reservation must stay within ±5% of mid.
+        # Prevents sparse-data sigma noise from flying reservation to wrong levels.
+        _max_deviation = mid * Decimal("0.05")
+        if abs(reservation_price - mid) > _max_deviation:
+            clamped = max(mid - _max_deviation, min(mid + _max_deviation, reservation_price))
+            logger.warning(
+                "SMM reservation clamped for %s: %.4f → %.4f (skew=%.4f sigma=%.4f q=%s)",
+                pid, float(reservation_price), float(clamped), float(skew), float(sigma), q,
+            )
+            reservation_price = clamped
 
         # --- Spread floor ---
         latency_p95 = self._latency_override_ms if self._latency_override_ms is not None else self._store.latency_p95_ms()
